@@ -44,14 +44,23 @@ class _MyHomePageState extends State<MyHomePage> {
     String platformVersion;
     try {
       platformVersion =
-          await _nativeServiceApp.invokeMethod('getPlatformVersion') ?? "Unknown platform version";
+          await _nativeServiceApp.invokeMethod('getPlatformVersion') ??
+              "Unknown platform version";
     } on PlatformException {
       platformVersion = "Failed to get platform version.";
     }
     if (!mounted) return;
-   setState(() {
+    setState(() {
       _platformVersion = platformVersion;
     });
+  }
+
+  Future<void> showNotification() async {
+    try {
+     await _nativeServiceApp.invokeMethod('getNotification');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   @override
@@ -69,6 +78,11 @@ class _MyHomePageState extends State<MyHomePage> {
               "Platform Version : $_platformVersion",
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            ElevatedButton(
+                onPressed: () {
+                  showNotification();
+                },
+                child: const Text("Show Notification"))
           ],
         ),
       ),
