@@ -22,7 +22,7 @@ public class MyMethodChannelHandler: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getPlatformVersion":
-            let version = String(UIDevice.version())
+            let version = String(UIDevice.current.systemVersion)
             result(version)
         default:
             result(FlutterMethodNotImplemented)
