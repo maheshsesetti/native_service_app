@@ -17,6 +17,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: {
+        '/secondScreen': (context) => const SecondScreen(),
+      },
     );
   }
 }
@@ -55,14 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> showNotification() async {
-    try {
-     await _nativeServiceApp.invokeMethod('getNotification');
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,10 +74,49 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             ElevatedButton(
-                onPressed: () {
-                  showNotification();
+                onPressed: () async {
+                  await _nativeServiceApp.invokeMethod('getNotification', {'screen': '/secondScreen'});
                 },
-                child: const Text("Show Notification"))
+                child: const Text("Basic Notification")),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/secondScreen');
+                },
+                child: const Text("Next Page"))
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SecondScreen extends StatefulWidget {
+  const SecondScreen({super.key});
+
+  @override
+  State<SecondScreen> createState() => _SecondScreenState();
+}
+
+class _SecondScreenState extends State<SecondScreen> {
+  static const _nativeServiceApp = MethodChannel('native_service_app');
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("Second Screen"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+                onPressed: () async {
+                  await _nativeServiceApp.invokeMethod(
+                      'getNotification', {'screen': '/secondScreen'});
+                },
+                child: const Text("Basic Notification"))
           ],
         ),
       ),

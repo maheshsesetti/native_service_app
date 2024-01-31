@@ -3,6 +3,7 @@ package com.example.native_service_app
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -46,7 +47,8 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             } "getNotification" -> {
-            showNotification()
+                val screen = call.argument<String>("screen")
+            showNotification(screen)
             result.success(null)
             } else -> {
                 result.notImplemented()
@@ -54,20 +56,28 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
         }
     }
 
-    private fun showNotification() {
+    private fun showNotification(screen:String?) {
         createNotificationChannelMethod()
-       val builder = NotificationCompat.Builder(this,CHANNEL_ID).
-       setSmallIcon(R.drawable.launch_background).
-       setContentTitle("My Notification").
-       setContentText("Much longer text that cannot fit one line...").
-       setStyle(NotificationCompat.BigTextStyle().bigText("Much longer text that cannot fit one line...")).
-       setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        val intent = Intent(context, MainActivity::class.java)
+        intent.action = Intent.ACTION_RUN
+        intent.putExtra("flutter_screen", screen)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context,0,
+            intent,PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
+        val builder = NotificationCompat.Builder(this,CHANNEL_ID).
+            setSmallIcon(R.drawable.launch_background).
+            setContentTitle("My Notification").
+            setContentText("Much longer text that cannot fit one line...").
+            setStyle(NotificationCompat.BigTextStyle().bigText("Much longer text that cannot fit one line...")).
+            setPriority(NotificationCompat.PRIORITY_DEFAULT).
+            setContentIntent(pendingIntent).
+            setAutoCancel(true)
         with(NotificationManagerCompat.from(this)) {
             notify(0,builder.build())
+
         }
     }
-
+    
     private fun createNotificationChannelMethod() {
 
         if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
@@ -81,6 +91,8 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
             notificationManager.createNotificationChannel(nfChannel)
 
         }
+
+
     }
 
 
