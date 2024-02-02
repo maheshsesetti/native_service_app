@@ -94,7 +94,6 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
                }
                result.success(null)
             } "send_message" -> {
-
                 result.success(null)
             }else -> {
                     result.notImplemented()

@@ -46,10 +46,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void startCommunication() {
     _eventNativeApp.receiveBroadcastStream().listen((event) {
+      event = "Hello Wold";
       debugPrint('Received from Native: $event');
     });
   }
 
+  void startSendNotification() {
+    _eventNativeApp.receiveBroadcastStream().listen((event) {
+      event = "/secondScreen";
+      debugPrint('Received from Native: $event');
+    });
+  }
 
   Future<void> getPlatformVersion() async {
     String platformVersion;
@@ -97,9 +104,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const Text("Network_Connection")),
             ElevatedButton(
                 onPressed: () {
-                  startCommunication(); 
+                  startCommunication();
                 },
                 child: const Text("Send Message")),
+                ElevatedButton(
+                onPressed: () {
+                  startSendNotification();
+                },
+                child: const Text("Send Event Notification")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/secondScreen');
