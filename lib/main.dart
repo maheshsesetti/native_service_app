@@ -36,12 +36,20 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _platformVersion = "unKnown";
   static const _nativeServiceApp = MethodChannel('native_service_app');
+  static const _eventNativeApp = EventChannel('event_native_service_app');
 
   @override
   void initState() {
     super.initState();
     getPlatformVersion();
   }
+
+  void startCommunication() {
+    _eventNativeApp.receiveBroadcastStream().listen((event) {
+      debugPrint('Received from Native: $event');
+    });
+  }
+
 
   Future<void> getPlatformVersion() async {
     String platformVersion;
@@ -75,9 +83,23 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                  await _nativeServiceApp.invokeMethod('getNotification', {'screen': '/secondScreen'});
+                  await _nativeServiceApp.invokeMethod(
+                    'getNotification',
+                  );
                 },
                 child: const Text("Basic Notification")),
+            ElevatedButton(
+                onPressed: () async {
+                  await _nativeServiceApp.invokeMethod(
+                    'isConnected',
+                  );
+                },
+                child: const Text("Network_Connection")),
+            ElevatedButton(
+                onPressed: () {
+                  startCommunication(); 
+                },
+                child: const Text("Send Message")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/secondScreen');

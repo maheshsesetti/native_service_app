@@ -1,19 +1,24 @@
 package com.example.native_service_app
 
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
+import android.net.ConnectivityManager
 import android.os.Bundle
-import android.os.PersistableBundle
+import android.widget.Toast
 
 
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -24,20 +29,51 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
 
     private lateinit  var methodChannel:MethodChannel
 
+    private lateinit  var eventChannel:EventChannel
 
     private var channel = "native_service_app"
 
-    private val CHANNEL_ID = "your_channel_id"
+    private var event_channel = "event_native_service_app"
 
+    private val CHANNEL_ID = "Notification_channel"
+
+    private val action = "snooze"
+
+    private lateinit var receiver: AirplaneModeChangeReceiver
+
+
+
+
+    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannelMethod()
+        receiver = AirplaneModeChangeReceiver()
+
+        val intentFilter: IntentFilter = IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+
+        registerReceiver(receiver,intentFilter)
+    }
+
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(receiver)
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(receiver)
+        super.onDestroy()
     }
 
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,channel)
+        eventChannel = EventChannel(flutterEngine.dartExecutor.binaryMessenger,event_channel)
+        eventChannel.setStreamHandler(
+            MyStreamHandler(context)
+        )
         methodChannel.setMethodCallHandler(this)
     }
 
@@ -48,13 +84,33 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             } "getNotification" -> {
                 val screen = call.argument<String>("screen")
-            showNotification(screen)
-            result.success(null)
-            } else -> {
-                result.notImplemented()
-        }
+                showNotification(screen)
+                result.success(null)
+            } "isConnected" ->{
+               if(isConnected()) {
+                   Toast.makeText(context, "Internet Mode Enabled", Toast.LENGTH_LONG).show()
+               } else {
+                   Toast.makeText(context, "Internet Mode Disabled", Toast.LENGTH_LONG).show()
+               }
+               result.success(null)
+            } "send_message" -> {
+
+                result.success(null)
+            }else -> {
+                    result.notImplemented()
+            }
         }
     }
+
+
+
+
+    private fun isConnected() : Boolean {
+           val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+           val networkInfo = connectivityManager.activeNetworkInfo
+           return  networkInfo != null && networkInfo.isConnectedOrConnecting
+       }
+
 
     private fun showNotification(screen:String?) {
         createNotificationChannelMethod()
@@ -77,9 +133,9 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
 
         }
     }
-    
-    private fun createNotificationChannelMethod() {
 
+
+    private fun createNotificationChannelMethod() {
         if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
             val nfChannel = NotificationChannel(CHANNEL_ID,"Your Channel Name",NotificationManager.IMPORTANCE_DEFAULT).apply {
                 lightColor = Color.BLUE
@@ -87,13 +143,12 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
                 enableLights(true)
             }
             val notificationManager:NotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
             notificationManager.createNotificationChannel(nfChannel)
-
         }
-
-
     }
-
-
 }
+
+
+
+
+
